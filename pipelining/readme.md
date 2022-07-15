@@ -9,7 +9,7 @@ Use Airflow based on established ORM representation to ingest into data warehous
 
 - Some assumptions:
     - Implement data quality checks on incoming data from OLTP?
-    - The landed data is assumed to have been processed once through based on order_items having only IDs. Hence, each row in the obtained data is assumed to already have a reference and will not be regenerated on the OLAP side.
+    - The landed data is assumed to have been processed once through based on order_items having only IDs. Hence, each row in the obtained data is assumed to already have a reference and will **not** be regenerated on the OLAP side.
     - Notice some duplication in data for product_id. However, they have a different incoming product_id and should be treated as different products?
 
     Implementation:
@@ -30,7 +30,7 @@ Each time a sale happens, the warehouse will pack the product and send it to a 3
 
 ### Solution
 
-Webhooks are a form of push notifications that we can subscribe to. Since the webhook is designed to be landed into S3, we can make use of S3 bucket, on insert, to trigger a simple lambda function which updates the status in junk_dim_tracking for front-end to query as needed for presentation to clients
+Webhooks are a form of push notifications that we can subscribe to. Since the webhook is designed to be landed into S3, we can make use of S3 bucket, on insert, to trigger a simple lambda function which updates the status in junk_dim_tracking for front-end to query as needed for presentation to clients.
 
 API calls on the other hand, is a form of pull notification where we have to request for the information from the servers. This is simpler to implement as there is no need to implement a listening service to listen for the webhook, but the frequency of updates will be extremely high. If tracking data is anticipated to be provided accurate up to the minute, Aftership's API is not expected to support.
 

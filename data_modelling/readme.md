@@ -24,6 +24,9 @@ Discuss your architecture considerations as well as pk/fks (soft or hard), index
             - Departments
             - Categories
             - Date
+
 2. Since there is a need to track pricing changes, for slow changing dimensions, implement an audit table to track changes as they are made.
-3. We will be making use of sharded NoSQL database in snowflake, hence for quick writes, do not implement FKs on the database itself. However, implement it on the ORM layer when doing analytics.
+
+3. We will be making use of sharded NoSQL database in snowflake, hence for quick writes, do not enforce FKs on the database itself. However, implement it on the ORM layer when doing analytics.
+
 4. Partitioning by date on the Fact Table can be done for speediness, alternatively, regularly ETL jobs to generate BI tables in a data mart can be a form of partitioning.
