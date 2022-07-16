@@ -1,5 +1,6 @@
 # import boto3
 from io import TextIOWrapper
+from typing import TextIO
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import *
@@ -18,9 +19,12 @@ class Pipeline1:
     '''
     error_records=[]
 
-    def __init__(self):
+    def __init__(self, folder=None):
         self.engine = create_engine(f'sqlite:///data/demo.db')
-        # self.engine = create_engine({postgres_connect_string})  
+        if folder is not None:
+            self.folder = folder
+        # self.s3 = boto3.client('s3')
+        # self.engine = create_engine({postgres_connect_string})
 
     def _compare_and_update_audit_table(self, oldobj, new_params, audit_table_obj, session):
         '''
@@ -53,22 +57,19 @@ class Pipeline1:
                 return False
         return True
 
-    def _ingest_categories(self):
+    def _get_file_from_s3(self, bucket, key):
         '''
-        ingesting categories | No Audit trail, Type 1 Dimension
+        internal function to get 
+        '''
+        response = self.s3.get_object(Bucket=bucket, Key=key)
+        return TextIOWrapper(response['body'])
+
+    def _ingest_categories(self, myfile):
+        '''
+        ingesting categories | No Audit trail, Type 1 Dimension, myfile should be an opened file object, to work with s3.
         '''
         with Session(self.engine) as s:
-        # # Read files from s3 resource.
-        # s3 = boto3.client('s3')
-
-        # # get StreamingBody from botocore.response
-        # bucket=categories
-        # key=part-00000
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # f = TextIOWrapper(response['Body'])
-
-            # with open('s3://bucket/key', transport_params=dict(client=client)) as f: Can use smart_open to open s3 files. But installs extra dependency.
-            with open('data/categories/part-00000') as f: # Reading from local file.
+            with myfile as f: # Reading from local file.
                 for l in csv.reader(f, quotechar='"', delimiter=',', skipinitialspace=True):
                     id, category_department_id, category_name = l
                     new_params = {
@@ -93,22 +94,13 @@ class Pipeline1:
 
             s.commit()
 
-    def _ingest_departments(self):
+    def _ingest_departments(self, myfile):
         '''
         ingesting departments | No Audit trail, Type 1 Dimension
         '''
-        # Read files from s3 resource.
-        # s3 = boto3.client('s3')
-
-        # # get StreamingBody from botocore.response
-        # bucket=categories
-        # key=part-00000
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # f = TextIOWrapper(response['Body'])
 
         with Session(self.engine) as s:
-            # with open('s3://bucket/key', transport_params=dict(client=client)) as f: Can use smart_open to open s3 files.
-            with open('data/departments/part-00000') as f:
+            with myfile as f:
                 for l in csv.reader(f, quotechar='"', delimiter=',', skipinitialspace=True):
                     id, department_name = l
                     new_params = {
@@ -132,21 +124,12 @@ class Pipeline1:
 
             s.commit()
 
-    def _ingest_products(self):
+    def _ingest_products(self, myfile):
         '''
         ingesting products | Yes Audit trail, Type 1 Dimension
         '''
-        # Read files from s3 resource.
-        # s3 = boto3.client('s3')
-        
-        # # get StreamingBody from botocore.response
-        # bucket=categories
-        # key=part-00000
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # f = TextIOWrapper(response['Body'])
         with Session(self.engine) as s:
-            # with open('s3://bucket/key', transport_params=dict(client=client)) as f: Can use smart_open to open s3 files.
-            with open('data/products/part-00000') as f:
+            with myfile as f:
                 for l in csv.reader(f, quotechar='"', delimiter=',', skipinitialspace=True):
                     id, product_category_id, product_name, product_description, product_price, product_image_url = l
                     new_params = {
@@ -176,21 +159,12 @@ class Pipeline1:
 
             s.commit()
 
-    def _ingest_customers(self):
+    def _ingest_customers(self, myfile):
         '''
         ingesting customers |Yes Audit trail, Type 1 Dimension
         '''
-        # Read files from s3 resource.
-        # s3 = boto3.client('s3')
-        
-        # # get StreamingBody from botocore.response
-        # bucket=categories
-        # key=part-00000
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # f = TextIOWrapper(response['Body'])
         with Session(self.engine) as s:
-            # with open('s3://bucket/key', transport_params=dict(client=client)) as f: Can use smart_open to open s3 files.
-            with open('data/customers/part-00000') as f:
+            with myfile as f:
                 for l in csv.reader(f, quotechar='"', delimiter=',', skipinitialspace=True):
                     id, customer_fname, customer_lname, customer_email, customer_password, customer_street, customer_city, customer_state, customer_zipcode = \
                         l
@@ -223,22 +197,13 @@ class Pipeline1:
 
             s.commit()
 
-    def _ingest_orders(self):
+    def _ingest_orders(self, myfile):
         '''
         Ingesting fact orders.
         '''
-        # Read files from s3 resource.
-        # s3 = boto3.client('s3')
-        
-        # # get StreamingBody from botocore.response
-        # bucket=categories
-        # key=part-00000
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # f = TextIOWrapper(response['Body'])
 
         with Session(self.engine) as s:
-            # with open('s3://bucket/key', transport_params=dict(client=client)) as f: Can use smart_open to open s3 files.
-            with open('data/orders/part-00000') as f:
+            with myfile as f:
                 for l in csv.reader(f, quotechar='"', delimiter=',', skipinitialspace=True):
                     id, order_datetime, order_customer_id, order_status = \
                         l
@@ -279,22 +244,12 @@ class Pipeline1:
 
             s.commit()
 
-    def _ingest_orders_items(self):
+    def _ingest_orders_items(self, myfile):
         '''
         Ingesting fact orders.
         '''
-        # Read files from s3 resource.
-        # s3 = boto3.client('s3')
-        
-        # # get StreamingBody from botocore.response
-        # bucket=categories
-        # key=part-00000
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # f = TextIOWrapper(response['Body'])
-
-        # with open('s3://bucket/key', transport_params=dict(client=client)) as f:
         with Session(self.engine) as s:
-            with open('data/order_items/part-00000') as f:
+            with myfile as f:
                 for l in csv.reader(f, quotechar='"', delimiter=',', skipinitialspace=True):
                     id, order_item_order_id, order_item_product_id, order_item_quantity, order_item_subtotal, order_item_product_price= \
                         l
@@ -334,39 +289,55 @@ class Pipeline1:
                         s.rollback()
             s.commit()
 
-    def _ingest_dimensions(self):
+    def _ingest_dimensions(self, folder=None, s3=False):
         '''
         Ingest dimensions from raw data.
         '''
+        if s3:
+            pass
+            ## do file stuff from s3
+        else:
+            category_file = open(os.path.join(self.folder, 'categories','part-00000'))
+            department_file = open(os.path.join(self.folder, 'departments','part-00000'))
+            product_file = open(os.path.join(self.folder, 'products','part-00000'))
+            customer_file = open(os.path.join(self.folder, 'customers','part-00000'))
+
         try:
-            self._ingest_categories()
-            self._ingest_departments()
-            self._ingest_products()
-            self._ingest_customers()
+            self._ingest_categories(category_file)
+            self._ingest_departments(department_file)
+            self._ingest_products(product_file)
+            self._ingest_customers(customer_file)
         except Exception as e:
             logging.error(e)
             pass
 
-    def _ingest_facts(self):
+    def _ingest_facts(self, s3=False):
         '''
         Ingest facts from raw data.
         '''
+        if s3:
+            pass
+            ## do file stuff from s3
+        else:
+            orders_file = open(os.path.join(self.folder, 'orders','part-00000'))
+            order_items_file = open(os.path.join(self.folder, 'order_items','part-00000'))
+
         try:
-            self._ingest_orders()
-            self._ingest_orders_items()
+            self._ingest_orders(orders_file)
+            self._ingest_orders_items(order_items_file)
+
         except Exception as e:
             logging.error(e)
             pass        
 
-    def main(self):
+    def main(self, s3=False):
         '''
         Driver script
         '''
         self._ingest_dimensions()
         self._ingest_facts()
 
-
 if __name__=='__main__':
-    a = Pipeline1()
+    a = Pipeline1(folder='data')
     a.main()
     # a._ingest_customers()
