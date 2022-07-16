@@ -9,7 +9,7 @@ from common.ETLRow import Pipeline1   # Add module to the dags, common folder fo
     dagrun_timeout=timedelta(minutes=60),
 )
 
-def section1():
+def pipelining():
     @task
     def process_df_in_folder():
 
@@ -18,4 +18,4 @@ def section1():
 
     process_df_in_folder()
 
-dag = section1()
+dag = pipelining()
