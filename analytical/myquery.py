@@ -20,7 +20,7 @@ agg_fields1 = select([*groupby,
             group_by(*groupby).\
                 cte()
 
-
+### Get aggregation for total number of days with sales, and total sold qty.
 agg_fields2 = select([*groupby,
     func.count(distinct(FactOrders.order_datetime)).label('count_days_with_sales'),
     func.sum(FactOrderItems.order_item_quantity).label('total_sales_qty')]).\
@@ -30,6 +30,7 @@ agg_fields2 = select([*groupby,
                 group_by(*groupby).\
                     cte()
 
+## Assemble select query for business unit to aggregate necessary fields. This can be discussed and arranged before hand with the unit in question.
 my_query = select(
     func.date('now'),
     select_fields, 
