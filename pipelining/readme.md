@@ -8,11 +8,15 @@ How would you push these data sets assume each new file is incremental from S3 i
 Propose time scheduled Airflow based on established ORM representation to ingest into data warehouse.
 
 - Some assumptions:
-    - Implement data quality checks on incoming data from OLTP?
-    - The landed data is assumed to have been processed once through based on order_items having only IDs. Hence, each row in the obtained data is assumed to already have a reference and will **not** be regenerated on the OLAP side.
+    - Implement data quality checks on incoming data?
+    - Incremental data from OLTP -> implies that data received is from db snapshot?
     - Notice some duplication in data for product_id. However, they have a different incoming product_id and should be treated as different products?
 
-    Implementation:
+- Additional implementation:
+    - Check dimensional changes and record in audit table. This will allow analysis of price and customer detail changes. 
+    - Other dimension changes are considered very slow, and would not be recorded for audit. 
+
+- Implementation:
     - Since storage is in s3, it is also possible to use an EventBridge trigger on S3 upload for ingestion. 
     - Have wrapped the loading script into a module for configuration in aws lambda. 
     - Alternatively, jenkins or bitbucket deployment pipeline can be used to integrate with development.
