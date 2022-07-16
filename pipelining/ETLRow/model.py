@@ -1,6 +1,6 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import validates, Session, relationship
+from sqlalchemy.orm import validates, Session
 from sqlalchemy.sql import *
 import os
 
@@ -16,12 +16,12 @@ class DimProducts(Base):
     product_category_id = Column(Integer)
     product_name = Column(VARCHAR)
     product_description = Column(VARCHAR)
-    product_price = Column(Numeric)
+    product_price = Column(VARCHAR)
     product_image_url = Column(VARCHAR)
     created_at = Column(DateTime, default=func.now())
     created_by = Column(VARCHAR, default='de1')
     modified_at = Column(DateTime, onupdate=func.now())
-    modified_by = Column(VARCHAR, onupdate='de2')
+    modified_by = Column(VARCHAR, onupdate='modifier1')
 
     ### Validation for a car and other dimensions can be specified.
     # @validates('manufacturer')
@@ -45,7 +45,7 @@ class DimCustomers(Base):
     created_at = Column(DateTime, default=func.now())
     created_by = Column(VARCHAR, default='de1')
     modified_at = Column(DateTime, onupdate=func.now())
-    modified_by = Column(VARCHAR, onupdate='de2')
+    modified_by = Column(VARCHAR, onupdate='modifier1')
     # created_at = Column(DateTime, default=func.now())
     # created_by = Column(VARCHAR, server_default=func.current_user())
     # modified_at = Column(DateTime, onupdate=func.now())
@@ -106,6 +106,24 @@ class JunkDimShipping(Base):
     shipping_tracking_number = Column(String)
     shipping_handler = Column(String)
     shipping_last_modified = Column(DATETIME)
+
+class AudPriceChanges(Base):
+    __tablename__ = "aud_price_changes"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    object_id = Column(Integer)
+    field_changed = Column(VARCHAR)
+    previous_value = Column(VARCHAR)
+    updated_value = Column(VARCHAR)
+    modified_at = Column(DATETIME)
+
+class AudCustomerChanges(Base):
+    __tablename__ = "aud_customer_changes"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    object_id = Column(Integer)
+    field_changed = Column(VARCHAR)
+    previous_value = Column(VARCHAR)
+    updated_value = Column(VARCHAR)
+    modified_at = Column(DATETIME)
 
 def main():
     '''
