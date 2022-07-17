@@ -130,3 +130,5 @@ dmypy.json
 
 *.csv
 test_queries.ipynb
+
+.vscode

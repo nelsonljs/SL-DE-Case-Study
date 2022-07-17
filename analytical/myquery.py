@@ -1,3 +1,7 @@
+'''
+Some of the functions in use here are specific to sqlite database implementation, we may have to migrate it over to a postgres implementation.
+'''
+
 from sqlalchemy.sql import *
 import pandas as pd
 from sqlalchemy import create_engine
@@ -12,7 +16,9 @@ groupby = [FactOrderItems.order_item_product_id]
 myday = datetime(2014,8,1)
 my_start_day = myday - timedelta(days=60)
 
+## Get Select descriptive fields - Denormalized audit tables for swifter analysis by the business unit.
 select_fields = select(DimProducts.id, DimProducts.product_name).cte()
+
 ## Get latest sold date.
 agg_fields1 = select([*groupby,
     func.max(FactOrders.order_datetime).label('latest_sold_date')]).\
